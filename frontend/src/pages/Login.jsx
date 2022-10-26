@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { FaSignInAlt } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { login } from '../features/auth/authSlice';
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from 'react-router-dom';
+import { FaSignInAlt } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { login, reset } from "../features/auth/authSlice";
+import Spinner from "../components/Spinner";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -13,8 +15,24 @@ const Login = () => {
   const { email, password } = formData;
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const { user, isLoading, isSuccess, message } = useSelector((state) => state.auth);
+  const { user, isLoading, isSuccess, isError, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    // Redirect when logged in
+    if (isSuccess || user) {
+      navigate("/");
+    }
+
+    dispatch(reset());
+  }, [isError, isSuccess, user, message, dispatch, navigate]);
 
   const handleOnChange = (e) => {
     setFormData((prevState) => ({
@@ -32,8 +50,11 @@ const Login = () => {
     };
 
     dispatch(login(userData));
-
   };
+
+  if (isLoading) {
+    return <Spinner />;
+  }
 
   return (
     <>
@@ -71,14 +92,12 @@ const Login = () => {
             />
           </div>
           <div className="form-group">
-            <button className="btn btn-block">
-              Submit
-            </button>
+            <button className="btn btn-block">Submit</button>
           </div>
         </form>
       </section>
     </>
   );
-}
+};
 
-export default Login
+export default Login;
